@@ -16,11 +16,7 @@ public class Dashboard extends javax.swing.JFrame {
     //crear otras pantallas
     public static P_Camarero p_camarero = new P_Camarero();
     public static PVComandas pvComandas = new PVComandas();
-
-    public JMenu getVerC() {
-        return VerC;
-    }
-    
+  
     
     //crear crud
     Crud crud = new Crud();
@@ -47,14 +43,13 @@ public class Dashboard extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Dashboard");
-        setMaximumSize(new java.awt.Dimension(800, 600));
         setMinimumSize(new java.awt.Dimension(800, 600));
-        setPreferredSize(new java.awt.Dimension(800, 600));
         setResizable(false);
         setSize(new java.awt.Dimension(800, 600));
 
         Contenido.setMaximumSize(new java.awt.Dimension(800, 577));
         Contenido.setMinimumSize(new java.awt.Dimension(800, 577));
+        Contenido.setPreferredSize(new java.awt.Dimension(800, 577));
 
         javax.swing.GroupLayout ContenidoLayout = new javax.swing.GroupLayout(Contenido);
         Contenido.setLayout(ContenidoLayout);
@@ -64,7 +59,7 @@ public class Dashboard extends javax.swing.JFrame {
         );
         ContenidoLayout.setVerticalGroup(
             ContenidoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 578, Short.MAX_VALUE)
+            .addGap(0, 577, Short.MAX_VALUE)
         );
 
         jMenuBar1.setMaximumSize(new java.awt.Dimension(70, 23));

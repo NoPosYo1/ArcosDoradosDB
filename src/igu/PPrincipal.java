@@ -15,8 +15,7 @@ public class PPrincipal extends javax.swing.JFrame {
     public static void setUsuarioApp(String usuarioApp) {
         PPrincipal.usuarioApp = usuarioApp;
     }
-    
-    
+
     //se crean variables escenciales para esta y otras clases
     public String empleadoSeleccionado;
     public static int id_empleado;

@@ -139,33 +139,74 @@ public class Crud {
         
     }
     
-    //se agregan servicios a una comanda y devuelve el ultimo id generado
-    public int agregarServicioComanda(int cantidad, int idServicio, int idComanda){
-        
-        
-        int idDetalleComanda = -1;
-        String query = "INSET INTO detalle_comanda (cantidad, id_servicio, id_comanda) VALUES (?,?,?)";
-        
-        try (Connection con = dbConnection.conectar(idUsuario)){
+    public void actualizarEstado(String id_estado, int id_detalle_comanda) {
+        String query = "{CALL ActualizarEstado(?, ?)}";
+
+        try (Connection con = dbConnection.conectar(idUsuario);
+             CallableStatement cs = con.prepareCall(query)) {
+
             
-            PreparedStatement ps = con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+            cs.setInt(1, id_detalle_comanda);
+            cs.setString(2, id_estado);
             
-            ps.setInt(1, cantidad);
-            ps.setInt(2, idServicio);
-            ps.setInt(3, idComanda);
-            
+            cs.executeUpdate();
+
+            System.out.println("Estado Actualizado correctamente.");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    
+    public int crearComanda(int mesa, int id_empleado){
+        
+        String query = "INSERT INTO comanda (mesa, fecha_hora_creacion, id_empleado) VALUES ( ?, NOW(), ?) ";
+        int idComanda = -1;
+        try (Connection con = dbConnection.conectar(idUsuario);
+            PreparedStatement ps = con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setInt(1, mesa);
+            ps.setInt(2, id_empleado);
+
             ps.executeUpdate();
 
             try(ResultSet rs = ps.getGeneratedKeys()){
                 if (rs.next()) {
-                    idDetalleComanda = rs.getInt(1);
+                    idComanda = rs.getInt(1);
                 }
-            }catch(SQLException e){
-                e.printStackTrace();
             }
             
-            
-            
+            System.out.println("Comanda creada correctamente.");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        
+        return idComanda;
+    }
+    
+    public int insertarDetalleComanda(int id_comanda,int id_servicio,int cantidad){
+        int idDetalleComanda = -1;
+        String query = "INSERT INTO detalle_comanda (cantidad, id_servicio, id_comanda) VALUES ( ?, ?, ?) ";
+        
+        try (Connection con = dbConnection.conectar(idUsuario);
+             PreparedStatement ps = con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setInt(1, cantidad);
+            ps.setInt(2, id_servicio); 
+            ps.setInt(3, id_comanda);
+
+            ps.executeUpdate();
+
+            System.out.println("Servicio añadido correctamente.");
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    idDetalleComanda = rs.getInt(1);
+                }
+            }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -175,9 +216,80 @@ public class Crud {
         return idDetalleComanda;
     }
     
-    public void insertarHistorial(){
-        //insertar historial desde PAgregarServicio
+    public List<Object []> cargarServiciosYEstados(int idComanda){
+        
+        List<Object[]> lista = new ArrayList<>();
+        
+        String query ="SELECT dc.id_detalle_comanda, s.nombre AS servicio, "
+                + "(SELECT e.nombre FROM historial h "
+                + "JOIN estado e ON h.id_estado = e.id_estado "
+                + "WHERE h.id_detalle_comanda = dc.id_detalle_comanda "
+                + "ORDER BY h.fecha_hora DESC LIMIT 1) AS estado_actual "
+                + "FROM detalle_comanda dc "
+                + "JOIN servicio s ON dc.id_servicio = s.id_servicio "
+                + "WHERE dc.id_comanda = ?";
+        
+        try(Connection con = dbConnection.conectar(idUsuario)){
+            PreparedStatement ps = con.prepareStatement(query);
+            ps.setInt(1, idComanda);
+            
+            ResultSet rs = ps.executeQuery();
+            
+            while(rs.next()){
+                int idDetalle = rs.getInt("id_detalle_comanda");
+                String servicio = rs.getString("servicio");
+                String estadoActual = rs.getString("estado_actual");
+                
+                lista.add(new Object[]{idDetalle, servicio, estadoActual});
+            }
+            
+            
+            
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+        return lista;
     }
+    
+    public void rellenarCBComandas(JComboBox<String> cb){
+        String query = "SELECT id_comanda FROM comanda ORDER BY id_comanda ASC";
+        
+        try(Connection con = dbConnection.conectar(idUsuario);
+            PreparedStatement ps = con.prepareStatement(query);
+            ResultSet rs = ps.executeQuery()){
+            
+            cb.removeAllItems();
+            
+            while(rs.next()){
+                int id = rs.getInt("id_comanda");
+                cb.addItem("Comanda #"+id);
+            }
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+    }
+    
+    public void verMesaComanda(JTextField t,int idComanda){
+        String query = "SELECT mesa FROM comanda WHERE id_comanda = ?";
+        
+        try(Connection con = dbConnection.conectar(idUsuario);
+            PreparedStatement ps = con.prepareStatement(query)){
+            
+            ps.setInt(1, idComanda);
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                int numeroMesa = rs.getInt("mesa");
+                t.setText(String.valueOf(numeroMesa));
+            }else{
+                t.setText("No encontrado");
+            }
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+    }
+
+
     
     //seleccionar usuario App
     private int seleccionarUser(String user) {
@@ -197,7 +309,11 @@ public class Crud {
         
         idUsuario = seleccionarUser(user);
     }
-    
+
+    public static int getIdUsuario() {
+        return idUsuario;
+    }
+
     
     
     

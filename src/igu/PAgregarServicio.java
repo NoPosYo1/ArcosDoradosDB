@@ -15,6 +15,8 @@ import main.Crud;
  */
 public class PAgregarServicio extends javax.swing.JFrame {
 
+    
+    
     //crear el crud
     Crud crud = new Crud();
     
@@ -79,7 +81,7 @@ public class PAgregarServicio extends javax.swing.JFrame {
         Descripcion.setRows(5);
         jScrollPane1.setViewportView(Descripcion);
 
-        CBServicios.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        CBServicios.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1" }));
         CBServicios.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 CBServiciosMouseClicked(evt);
@@ -197,37 +199,17 @@ public class PAgregarServicio extends javax.swing.JFrame {
     }//GEN-LAST:event_CBServiciosMouseClicked
 
     private void AgregarServicioMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_AgregarServicioMouseClicked
-        // agregar Servicio a lista servicios de P_Camarero
-        String mesa = (String) Dashboard.p_camarero.getCBMesa().getSelectedItem();
         
-        
-        if (mesa == null || mesa.equals("Seleccione una mesa")) {
-            JOptionPane.showMessageDialog(this, "Por favor, seleccione una mesa","Mesa no seleccionada",JOptionPane.WARNING_MESSAGE);
+        String servicio = CBServicios.getSelectedItem().toString();
+        String cantidad = CBCantidad.getSelectedItem().toString();
             
+        Dashboard.p_camarero.rellenarInfoComanda(servicio,cantidad);
             
-        }else{
-            String servicio = CBServicios.getSelectedItem().toString();
-            String cantidad = CBCantidad.getSelectedItem().toString();
-            
-            Dashboard.p_camarero.rellenarInfoComanda(servicio,cantidad);
-            
-            idServicio = crud.seleccionarIDServicio(servicio);
-            int idDetalleComanda ;
-            
-            
-            crud.insertarHistorial();
-            
-            
-        }
-        
-        
-        
-        
-        
+        idServicio = crud.seleccionarIDServicio(servicio);
+
     }//GEN-LAST:event_AgregarServicioMouseClicked
 
     private void CerrarVentanaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_CerrarVentanaMouseClicked
-        // 
         this.setVisible(false);
     }//GEN-LAST:event_CerrarVentanaMouseClicked
 
@@ -269,7 +251,6 @@ public class PAgregarServicio extends javax.swing.JFrame {
         }
         
     }
-
     private void configurarEventos() {
         
         CBTipoServicio.addActionListener( e -> {

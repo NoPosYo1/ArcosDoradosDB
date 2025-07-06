@@ -1,10 +1,11 @@
 package igu;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import main.Crud;
+import igu.Dashboard;
 
 /**
  *
@@ -16,6 +17,14 @@ public class P_Camarero extends javax.swing.JPanel {
     //variables escenciales
     public static PAgregarServicio pAgregarServ = new PAgregarServicio();
     
+    
+    //crear 2 List para que guarden el servicio y la cantidad para la comanda
+    private Map<String, Integer> serviciosCantidad = new LinkedHashMap<>();
+
+    
+    //para la JList
+    private ArrayList listaSer = new ArrayList(); // se guardan los servicios agregados
+    private DefaultListModel nuevoModelo = new DefaultListModel();
     
     //crud
     Crud crud = new Crud();
@@ -41,7 +50,7 @@ public class P_Camarero extends javax.swing.JPanel {
         BorrarComanda = new javax.swing.JButton();
         CrearComanda = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
-        ListaSrviciosComanda = new javax.swing.JList<>();
+        ListaServiciosComanda = new javax.swing.JList<>();
 
         setMaximumSize(new java.awt.Dimension(800, 577));
         setMinimumSize(new java.awt.Dimension(800, 577));
@@ -73,12 +82,12 @@ public class P_Camarero extends javax.swing.JPanel {
             }
         });
 
-        ListaSrviciosComanda.setModel(new javax.swing.AbstractListModel<String>() {
+        ListaServiciosComanda.setModel(new javax.swing.AbstractListModel<String>() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
             public int getSize() { return strings.length; }
             public String getElementAt(int i) { return strings[i]; }
         });
-        jScrollPane2.setViewportView(ListaSrviciosComanda);
+        jScrollPane2.setViewportView(ListaServiciosComanda);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -131,11 +140,53 @@ public class P_Camarero extends javax.swing.JPanel {
     }//GEN-LAST:event_BAgregarServicioMouseClicked
 
     private void CrearComandaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_CrearComandaMouseClicked
-        // TODO add your handling code here:
+        
+        try {
+            // 1. Obtener la mesa seleccionada
+            int idMesa = Integer.parseInt((String) CBMesa.getSelectedItem());
+
+            // 2. Crear comanda
+            int idComanda = crud.crearComanda(idMesa, PPrincipal.id_empleado);
+
+            // 3. Agregar servicios a la comanda
+            for (Map.Entry<String, Integer> entry : serviciosCantidad.entrySet()) {
+                String servicio = entry.getKey();
+                int cantidad = entry.getValue();
+
+                int idServicio = crud.seleccionarIDServicio(servicio);
+                String estadoInicial = "SOL";
+
+                int idDetalle = crud.insertarDetalleComanda(idComanda, idServicio, cantidad);
+
+                // 4. Insertar en historial
+                crud.actualizarEstado(estadoInicial, idDetalle);
+            }
+
+            // 5. Mostrar mensaje y limpiar
+            JOptionPane.showMessageDialog(this, "Comanda creada exitosamente.");
+            serviciosCantidad.clear();
+            listaSer.clear();
+            nuevoModelo.clear();
+            ListaServiciosComanda.setModel(nuevoModelo);
+            Dashboard.pvComandas.recargarComandas();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error al crear la comanda.");
+        }
+        
     }//GEN-LAST:event_CrearComandaMouseClicked
 
     private void BorrarComandaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_BorrarComandaMouseClicked
-        // TODO add your handling code here:
+
+        serviciosCantidad.clear();
+        listaSer.clear();
+        nuevoModelo.clear();
+        ListaServiciosComanda.setModel(nuevoModelo);
+        
+        JOptionPane.showMessageDialog(null, "Comanda Eliminada con Exito!");
+
+
     }//GEN-LAST:event_BorrarComandaMouseClicked
     //metodos adicionales que no son crud
     private void añadirMesas(){
@@ -152,27 +203,38 @@ public class P_Camarero extends javax.swing.JPanel {
     private javax.swing.JButton BorrarComanda;
     private javax.swing.JComboBox<String> CBMesa;
     private javax.swing.JButton CrearComanda;
-    private javax.swing.JList<String> ListaSrviciosComanda;
+    private javax.swing.JList<String> ListaServiciosComanda;
     private javax.swing.JLabel TextMesa;
     private javax.swing.JLabel TextVCComanda;
     private javax.swing.JScrollPane jScrollPane2;
     // End of variables declaration//GEN-END:variables
 
-    public JList<String> getListaSrviciosComanda() {
-        return ListaSrviciosComanda;
+    public JList<String> getListaServiciosComanda() {
+        return ListaServiciosComanda;
     }
 
-    public void setListaSrviciosComanda(JList<String> ListaSrviciosComanda) {
-        this.ListaSrviciosComanda = ListaSrviciosComanda;
+    public void setListaServiciosComanda(JList<String> ListaSrviciosComanda) {
+        this.ListaServiciosComanda = ListaSrviciosComanda;
     }
     
-    public void rellenarInfoComanda(String servicio, String cantidad){
-        String nuevo = "| " + servicio + " | " + cantidad + " Unidades |";
-        
+    public void rellenarInfoComanda(String servicio, String cantidad) {
+        int cantNueva = Integer.parseInt(cantidad);
+
+        // Si ya existe el servicio, suma la cantidad
+        serviciosCantidad.merge(servicio, cantNueva, Integer::sum);
+
+        // Actualizar la lista visual
+        listaSer.clear();
+        nuevoModelo.clear();
+
+        for (Map.Entry<String, Integer> entry : serviciosCantidad.entrySet()) {
+            String linea = "| " + entry.getKey() + " | " + entry.getValue() + " Unidades |";
+            listaSer.add(linea);
+            nuevoModelo.addElement(linea);
+        }
+
+        ListaServiciosComanda.setModel(nuevoModelo);
     }
 
-    public JComboBox<String> getCBMesa() {
-        return CBMesa;
-    }
     
 }
